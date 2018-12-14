@@ -21,9 +21,6 @@ class ProjectItem(scrapy.Item):
     # 项目star
     project_star = scrapy.Field()
 
-    # 项目fork
-    project_fork = scrapy.Field()
-
     # 项目commit
     project_commit = scrapy.Field()
 
