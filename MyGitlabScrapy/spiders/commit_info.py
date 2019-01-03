@@ -13,7 +13,7 @@ class MySpider(scrapy.Spider):
         commit_info = CommitInfoItem()
 
         commit_info['commit_id'] = response.xpath( '//div[@class="header-main-content"]/strong/span[@class="commit-sha"]/text()').extract()
-        # commit_info['commit_time'] = response.xpath('//div[@class="header-main-content"]/time[@class="js-timeago js-timeago-render"]/@datetime').extract()
+        commit_info['commit_time'] = response.xpath('//div[@class="header-main-content"]/time/@datetime').extract()
         commit_info['author_name'] = response.xpath('//span[@class="commit-author-name"]/text()').extract()
 
         commit_info['commit_title'] = response.xpath('//h3[@class="commit-title"]/text()').extract()

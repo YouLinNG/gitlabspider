@@ -31,7 +31,7 @@ class ProjectItem(scrapy.Item):
 
 class CommitInfoItem(scrapy.Item):
     commit_id = scrapy.Field()
-    # commit_time = scrapy.Field()
+    commit_time = scrapy.Field()
     author_name = scrapy.Field()
     commit_title = scrapy.Field()
     commit_description = scrapy.Field()
