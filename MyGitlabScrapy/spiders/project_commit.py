@@ -12,9 +12,6 @@ class MySpider(scrapy.Spider):
     def parse(self, response):
         project_commit = ProjectCommitItem()
 
-        project_commit['commit_id'] = response.xpath( '//div[@class="label label-monospace"]/text()').extract()
-        # commit_href is empty
-        # project_commit['commit_href'] = response.xpath('//a[@class="commit-row-message item-title"]/@href').extract()
-        project_commit['build_result'] = response.xpath('//li[@class="commits-row"]/ul/li[@class="commit flex-row js-toggle-container"]/div[@class="commit-detail flex-list"]/div[@class="commit-actions flex-row d-none d-sm-flex"]/a/@data-original-title').extract()
-
+        project_commit['commit_href'] = response.xpath('//div[@class="d-block d-sm-none"]/a/@href').extract()
+        project_commit['build_result'] = response.xpath('//div[@class="d-block d-sm-none"]/a/@title').extract()
         yield project_commit

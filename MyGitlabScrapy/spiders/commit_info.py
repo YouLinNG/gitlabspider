@@ -7,12 +7,20 @@ class MySpider(scrapy.Spider):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36',
     }
-    start_urls = ["https://gitlab.com/fdroid/fdroidclient/commit/823ddcaca8fe98a0254a224a8aefdb30c42e305b", ]
+
+    def start_requests(self):
+        start_urls = [
+            'https://gitlab.com/fdroid/fdroidclient/commit/16a5ac32b754e9c8724021f69e64854f814047db',
+            'https://gitlab.com/fdroid/fdroidclient/commit/12728d6101d78561f22a0d8702865e070c36ce54',
+            'https://gitlab.com/fdroid/fdroidclient/commit/9a04ce43324fc29b479c527b4858a9040a76c1ab',
+        ]
+        for url in start_urls:
+            yield scrapy.Request(url=url, callback=self.parse)
 
     def parse(self, response):
         commit_info = CommitInfoItem()
 
-        commit_info['commit_id'] = response.xpath( '//div[@class="header-main-content"]/strong/span[@class="commit-sha"]/text()').extract()
+        commit_info['commit_id'] = response.xpath( '//div[@class="header-main-content"]/button[@class="btn btn-clipboard btn-transparent"]/@data-clipboard-text').extract()
         commit_info['commit_time'] = response.xpath('//div[@class="header-main-content"]/time/@datetime').extract()
         commit_info['author_name'] = response.xpath('//span[@class="commit-author-name"]/text()').extract()
 

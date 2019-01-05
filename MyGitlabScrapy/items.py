@@ -42,7 +42,6 @@ class CommitInfoItem(scrapy.Item):
     pass
 
 class ProjectCommitItem(scrapy.Item):
-    commit_id = scrapy.Field()
-    # commit_href = scrapy.Field()
+    commit_href = scrapy.Field()
     build_result = scrapy.Field()
     pass
