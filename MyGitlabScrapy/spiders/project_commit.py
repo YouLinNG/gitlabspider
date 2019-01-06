@@ -16,8 +16,13 @@ class MySpider(scrapy.Spider):
     def parse(self, response):
         project_commit = ProjectCommitItem()
 
-        project_commit['commit_href'] = response.xpath('//div[@class="d-block d-sm-none"]/a/@href').extract()
-        project_commit['build_result'] = response.xpath('//div[@class="d-block d-sm-none"]/a/@title').extract()
+        project_commits = response.xpath('//div[@class="d-block d-sm-none"]')
+
+        for commit in project_commits:
+
+         project_commit['commit_href'] = commit.xpath('.//a/@href').extract()[0]
+         project_commit['build_result'] = commit.xpath('.//a/@title').extract()[0]
+
         yield project_commit
 
         if self.offset<400:
