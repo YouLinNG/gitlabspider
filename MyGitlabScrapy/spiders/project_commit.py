@@ -25,7 +25,7 @@ class MySpider(scrapy.Spider):
             project_commit['build_result'] = commit.xpath('.//a/@title').extract()[0]
             yield project_commit
 
-        if self.offset<400:
+        if True:
             self.offset+=40
             url=self.baseURL+ self.URLstr + str(self.offset)
             yield scrapy.Request(url,callback=self.parse)
