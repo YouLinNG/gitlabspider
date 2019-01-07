@@ -2,21 +2,21 @@
 import scrapy
 from MyGitlabScrapy.items import ProjectItem
 from scrapy import Request
+import csv
 
 class ProjectSpiderSpider(scrapy.Spider):
     name = 'project_spider'
-
 
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36',
     }
 
     def start_requests(self):
-        url = 'https://gitlab.com/fdroid/fdroidclient'
-        yield Request(url, headers=self.headers)
+        with open("MyGitlabScrapy/spiders/gitlabweb.csv") as file:
+            for url in file:
+                yield scrapy.Request(url=url, callback=self.parse)
 
     def parse(self, response):
-
         project = ProjectItem()
 
         project['project_id'] = response.xpath('//span[@class="text-secondary"]/text()').extract()
@@ -25,7 +25,4 @@ class ProjectSpiderSpider(scrapy.Spider):
         project['project_size'] = response.xpath('//ul[@class="nav"]/li[5]/a/strong[@class="project-stat-value"]/text()').extract()
         project['project_star'] = response.xpath('//span[@class="star-count count-badge-count d-flex align-items-center"]/text()').extract()
 
-
-        print(project)
-
-        pass
+        yield project

@@ -9,11 +9,11 @@ class MySpider(scrapy.Spider):
     }
 
     def start_requests(self):
-        start_urls = [
-            'https://gitlab.com/fdroid/fdroidclient/commit/16a5ac32b754e9c8724021f69e64854f814047db',
-            'https://gitlab.com/fdroid/fdroidclient/commit/12728d6101d78561f22a0d8702865e070c36ce54',
-            'https://gitlab.com/fdroid/fdroidclient/commit/9a04ce43324fc29b479c527b4858a9040a76c1ab',
-        ]
+        start_urls = []
+        with open("MyGitlabScrapy/spiders/gitlabweb.csv") as file:
+            for url in file:
+                start_urls.append(url)
+
         for url in start_urls:
             yield scrapy.Request(url=url, callback=self.parse)
 
