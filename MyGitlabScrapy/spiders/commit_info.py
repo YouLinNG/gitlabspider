@@ -1,6 +1,7 @@
 import scrapy
 from MyGitlabScrapy.items import CommitInfoItem
 import sys
+import json
 
 class MySpider(scrapy.Spider):
     name = 'commit_info'
@@ -10,9 +11,10 @@ class MySpider(scrapy.Spider):
 
     def start_requests(self):
         start_urls = []
-        with open("MyGitlabScrapy/spiders/gitlabweb.csv") as file:
-            for url in file:
-                start_urls.append(url)
+        file = open("MyGitlabScrapy/spiders/project_commit.json", "rb")
+        data = json.load(file)
+        for item in data:
+            start_urls.append(item["commit_href"])
 
         for url in start_urls:
             yield scrapy.Request(url=url, callback=self.parse)

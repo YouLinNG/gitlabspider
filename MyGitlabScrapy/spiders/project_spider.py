@@ -2,7 +2,7 @@
 import scrapy
 from MyGitlabScrapy.items import ProjectItem
 from scrapy import Request
-import csv
+import json
 
 class ProjectSpiderSpider(scrapy.Spider):
     name = 'project_spider'
@@ -12,9 +12,14 @@ class ProjectSpiderSpider(scrapy.Spider):
     }
 
     def start_requests(self):
-        with open("MyGitlabScrapy/spiders/gitlabweb.csv") as file:
-            for url in file:
-                yield scrapy.Request(url=url, callback=self.parse)
+        start_urls = []
+        file = open("MyGitlabScrapy/spiders/gitlabweb.json", "rb")
+        data = json.load(file)
+        for item in data:
+            start_urls.append(item["project_hash"])
+
+        for url in start_urls:
+            yield scrapy.Request(url=url, callback=self.parse)
 
     def parse(self, response):
         project = ProjectItem()

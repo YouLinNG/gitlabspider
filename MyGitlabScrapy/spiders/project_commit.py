@@ -21,7 +21,7 @@ class MySpider(scrapy.Spider):
 
         for commit in project_commits:
             p1 = re.compile(r'[/](.*)[/]')
-            project_commit['commit_href'] = re.search(p1, commit.xpath('.//a/@href').extract()[0]).group()
+            project_commit['commit_href'] = "https://gitlab.com" + re.search(p1, commit.xpath('.//a/@href').extract()[0]).group()
             project_commit['build_result'] = commit.xpath('.//a/@title').extract()[0]
             yield project_commit
 
