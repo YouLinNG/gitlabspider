@@ -2,9 +2,113 @@
 import sys
 import json
 import re
+import datetime
+import time
+import pytz
+import pandas as pd
+import numpy as np
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
+# 将时间整理为数值形式
+def utc_to_local(utc_time_str, utc_format='%Y-%m-%dT%H:%M:%SZ'):
+    local_tz = pytz.timezone('Asia/Chongqing')
+    local_format = "%Y-%m-%d %H:%M"
+    utc_dt = datetime.datetime.strptime(utc_time_str, utc_format)
+    local_dt = utc_dt.replace(tzinfo=pytz.utc).astimezone(local_tz)
+    time_str = local_dt.strftime(local_format)
+    return int(time.mktime(time.strptime(time_str, local_format)))
+
+# 将构建结果和链接  与  commit各项信息合并
+def commits_info_merge():
+    file_info = open("commit_info.json", "rb")
+    info_data = json.load(file_info)
+    file_result = open("project_commit.json", "rb")
+    result_data = json.load(file_result)
+
+    p1 = re.compile('[^/]+(?!.*/)')
+
+    commit_info_merge=[]
+    i=0
+    for result_item in result_data:
+        search_id = re.search(p1, result_item["commit_href"]).group(0)
+        print search_id
+        for info_item in info_data:
+            commit_id = info_item["commit_id"]
+            if search_id==commit_id[0]:
+                i=i+1
+                print i
+                info_item["commit_href"]=result_item["commit_href"]
+                info_item["build_result"] = result_item["build_result"]
+
+                info_item["commit_id"]=info_item["commit_id"][0]
+                info_item["additions_num"] = info_item["additions_num"][0]
+                info_item["commit_title"] = info_item["commit_title"][0]
+                info_item["author_name"] = info_item["author_name"][0]
+                info_item["changed_file_num"] = info_item["changed_file_num"][0]
+                info_item["deletions_num"] = info_item["deletions_num"][0]
+                if info_item["commit_description"]:
+                    info_item["commit_description"] = info_item["commit_description"][0]
+                else:
+                    info_item["commit_description"] =""
+                info_item["commit_time"] = str(utc_to_local(info_item["commit_time"][0]))
+
+                commit_info_merge.append(info_item)
+                break
+
+    with open('commit_info_merge.json', 'w') as json_file:
+          json_file.write(json.dumps(sorted(commit_info_merge, key=lambda x: x['commit_time']), indent=4))
+
+
+
+
+# 获取每个contributer提交的总次数，制成新文件
+def get_contributer_info():
+    file_info = open("../data/commit_info_merge.json", "rb")
+    info_data = json.load(file_info)
+    final_data = [{"author_name":"","auther_commit_total":"0"}]
+    p1 = re.compile('\d+')
+    flag = 0
+    newauthor = {"author_name":"","auther_commit_total":"1"}
+
+    for info_data_item in info_data:
+        contributer = str(info_data_item["author_name"])
+        for final_contributer in final_data:
+            if contributer == str(final_contributer["author_name"]):
+                final_contributer["auther_commit_total"] = str(int(re.search(p1, final_contributer["auther_commit_total"]).group()) + 1).decode('utf-8')
+                flag = 0
+                break
+            else:
+                flag = 1
+        if flag == 1:
+            newauthor["author_name"] = str(info_data_item["author_name"]).decode('utf-8')
+            final_data.append(newauthor)
+            newauthor = {"author_name": "", "auther_commit_total": "1"}
+
+    with open('../data/contributer_info.json', 'w') as json_file:
+        json_file.write(json.dumps(final_data, indent=4))
+
+# 把contributer提交的总次数与commit的信息合并
+def merge_contributer_commit():
+    file_info = open("../data/contributer_info.json", "rb")
+    contributer_data = json.load(file_info)
+
+    file_info = open("../data/commit_info_merge.json", "rb")
+    info_data = json.load(file_info)
+    commit_info_merge_contributer = []
+
+    for info_data_item in info_data:
+        for contributer_data_item in contributer_data:
+            if str(info_data_item["author_name"]) == str(contributer_data_item["author_name"]):
+                info_data_item["auther_commit_total"] = contributer_data_item["auther_commit_total"]
+                commit_info_merge_contributer.append(info_data_item)
+                break
+
+    with open('../data/commit_info_merge_contributer.json', 'w') as json_file:
+        json_file.write(json.dumps(sorted(commit_info_merge_contributer, key=lambda x: x['commit_time']), indent=4))
+
+
+# 得到每次commit源文件和配置文件修改的个数
 def getJavaConfigNum(info_data_item):
     java_count = 0
     rb_count = 0
@@ -27,8 +131,9 @@ def getJavaConfigNum(info_data_item):
     configNum = xml_count + config_count
     return javaNum,configNum
 
+# 将所有commit信息整合成只有构建的数值形式
 def commitDataIntoNum():
-    file_info = open("../data/commit_info_merge.json", "rb")
+    file_info = open("../data/commit_info_merge_contributer.json", "rb")
     info_data = json.load(file_info)
 
     final_data=[]
@@ -58,6 +163,7 @@ def commitDataIntoNum():
             mydic["commit_href"] = info_data_item["commit_href"]
             mydic["commit_id"] = info_data_item["commit_id"]
             mydic["commit_time"] = info_data_item["commit_time"]
+            mydic["auther_commit_total"] = info_data_item["auther_commit_total"]
 
             mydic["length_all_description"] = str(int(re.search(p1, mydic["commit_title_length"]).group())+ int(re.search(p1, mydic["commit_description_length"]).group())).decode('utf-8')
             mydic["changed_code_lines"] = str(int(re.search(p1, mydic["additions_num"]).group()) + int(re.search(p1, mydic["deletions_num"]).group())).decode('utf-8')
@@ -81,8 +187,74 @@ def commitDataIntoNum():
         json_file.write(json.dumps(sorted(final_data, key=lambda x: x['commit_time']), indent=4))
 
 
+# 最近五次项目构建的成功率
+def build_success_rate_five():
+    file_info = open("../data/test_result.json", "rb")
+    info_data = json.load(file_info)
+
+    final_data=[]
+    p1 = re.compile('\d+')
+    mydic ={}
+    tag = 0
+
+    for info_data_item in info_data:
+        mydic["commit_time"] = info_data_item["commit_time"]
+        if tag>=5:
+            success = 0
+            for i in range(tag-5,tag):
+                if int(re.search(p1, info_data[i]["build_result"]).group()) == 1:
+                    success = success + 1
+            success_rate = success / 5.0
+            mydic["success_last_five"] = str(success_rate).decode("utf-8")
+        else:
+            mydic["success_last_five"] = "0"
+        mydic["tag"] = str(tag).decode("utf-8")
+        tag = tag + 1
+
+        final_data.append(mydic)
+        mydic ={}
+
+    with open('../data/result_project_success.json', 'w') as json_file:
+        json_file.write(json.dumps(sorted(final_data, key=lambda x: x['commit_time']), indent=4))
+
+
+# 将项目最近五次的构建成功率与构建信息合并
+def merge_info_success_rate():
+    file_info = open("../data/result_project_success.json", "rb")
+    project_success_data = json.load(file_info)
+
+    file_info = open("../data/test_result.json", "rb")
+    info_data = json.load(file_info)
+    commit_info_merge_success = []
+
+    for project_success_data_item in project_success_data:
+        for info_data_item in info_data:
+            if str(info_data_item["commit_time"]) == str(project_success_data_item["commit_time"]):
+                info_data_item["tag"] = project_success_data_item["tag"]
+                info_data_item["success_last_five"] = project_success_data_item["success_last_five"]
+                commit_info_merge_success.append(info_data_item)
+                break
+
+        with open('../data/commit_info_merge_success.json', 'w') as json_file:
+            json_file.write(json.dumps(sorted(commit_info_merge_success, key=lambda x: x['commit_time']), indent=4))
+
+
+# 选择最后神经网络使用的数据，并整理为data_x data_y的格式
+def finalDataChoose():
+    file_info = open("../data/commit_info_merge_success.json", "rb")
+    info_data = json.load(file_info)
+
+    info_dataset = pd.DataFrame(info_data, columns=[ 'changed_code_lines', 'changed_file_num', 'java_num', 'config_num',  'commit_count',  'average_commit_filenum', 'length_all_description',"auther_commit_total","last_build_result","time_interval","success_last_five",'build_result'])
+    info_dataset = info_dataset.convert_objects(convert_numeric=True)
+    col = info_dataset.columns.values.tolist()
+    col1 = col[2:-1]
+    data_x = np.array(info_dataset[col1])
+    data_y = info_dataset['build_result']
+    return data_x,data_y
+
+
 def main():
-    commitDataIntoNum()
+    merge_info_success_rate()
 
 if __name__ == '__main__':
     main()

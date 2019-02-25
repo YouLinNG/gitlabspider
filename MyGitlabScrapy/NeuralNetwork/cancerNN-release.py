@@ -12,10 +12,10 @@ from sklearn.datasets import  load_breast_cancer
 from sklearn.model_selection import train_test_split
 
 def finalDataChoose():
-    file_info = open("../data/test_result.json", "rb")
+    file_info = open("../data/commit_info_merge_success.json", "rb")
     info_data = json.load(file_info)
 
-    info_dataset = pd.DataFrame(info_data, columns=[ 'changed_code_lines', 'changed_file_num', 'java_num', 'config_num',  'commit_count',  'average_commit_filenum', 'length_all_description','build_result'])
+    info_dataset = pd.DataFrame(info_data, columns=[ 'changed_code_lines', 'changed_file_num', 'java_num', 'config_num',  'commit_count',  'average_commit_filenum', 'length_all_description',"auther_commit_total","last_build_result","time_interval","success_last_five",'build_result'])
     info_dataset = info_dataset.convert_objects(convert_numeric=True)
     col = info_dataset.columns.values.tolist()
     col1 = col[2:-1]
@@ -248,7 +248,7 @@ def DNN(X_train, y_train, X_test, y_test, layer_dims, learning_rate= 0.001, num_
 if __name__ == "__main__":
 	# X_data, y_data = load_breast_cancer(return_X_y=True)
 	X_data, y_data = finalDataChoose()
-	X_train, X_test,y_train,y_test = train_test_split(X_data, y_data, train_size=0.8,random_state=28)
+	X_train, X_test,y_train,y_test = train_test_split(X_data, y_data, train_size=0.9,random_state=28)
 	X_train = X_train.T
 	# y_train = y_train.reshape(y_train.shape[0], -1).T
 	y_train = y_train.values.reshape(y_train.shape[0], -1).T
