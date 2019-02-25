@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# encoding=utf8
 import scrapy
 from MyGitlabScrapy.items import ProjectItem
 from scrapy import Request

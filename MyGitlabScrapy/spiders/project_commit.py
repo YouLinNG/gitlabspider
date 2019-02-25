@@ -17,13 +17,19 @@ class MySpider(scrapy.Spider):
     def parse(self, response):
         project_commit = ProjectCommitItem()
 
-        project_commits = response.xpath('//div[@class="d-block d-sm-none"]')
+        project_commits = response.xpath('//li[@class="commit flex-row js-toggle-container"]')
 
         for commit in project_commits:
-            p1 = re.compile(r'[/](.*)[/]')
-            project_commit['commit_href'] = "https://gitlab.com" + re.search(p1, commit.xpath('.//a/@href').extract()[0]).group()
-            project_commit['build_result'] = commit.xpath('.//a/@title').extract()[0]
+            p1 = re.compile('.*Commit: .*')
+            project_commit['commit_href'] = "https://gitlab.com" + commit.xpath('.//div[@class="commit-detail flex-list"]/div[@class ="commit-content qa-commit-content"]/a/@href').extract()[0]
+            build_result_exist= commit.xpath('.//div[@class="commit-detail flex-list"]/div[@class ="commit-content qa-commit-content"]').extract()[0]
+            exist_or_not = re.search(p1, build_result_exist)
+            if exist_or_not:
+                project_commit['build_result']= commit.xpath('.//div[@class="commit-detail flex-list"]/div[@class ="commit-content qa-commit-content"]/div[@class ="d-block d-sm-none"]/a/@title').extract()[0]
+            else:
+                project_commit['build_result']= ""
             yield project_commit
+
 
         if True:
             self.offset+=40

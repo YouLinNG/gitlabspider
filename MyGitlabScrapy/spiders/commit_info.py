@@ -1,6 +1,5 @@
 import scrapy
 from MyGitlabScrapy.items import CommitInfoItem
-import sys
 import json
 
 class MySpider(scrapy.Spider):
