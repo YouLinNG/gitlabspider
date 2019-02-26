@@ -5,6 +5,7 @@
 """
 
 import numpy as np
+import re
 import matplotlib.pyplot as plt
 import json
 import pandas as pd
@@ -12,7 +13,7 @@ from sklearn.datasets import  load_breast_cancer
 from sklearn.model_selection import train_test_split
 
 def finalDataChoose():
-    file_info = open("../data/commit_info_merge_success.json", "rb")
+    file_info = open("../data/final.json", "rb")
     info_data = json.load(file_info)
 
     info_dataset = pd.DataFrame(info_data, columns=[ 'changed_code_lines', 'changed_file_num', 'java_num', 'config_num',  'commit_count',  'average_commit_filenum', 'length_all_description',"auther_commit_total","last_build_result","time_interval","success_last_five",'build_result'])
@@ -22,6 +23,7 @@ def finalDataChoose():
     data_x = np.array(info_dataset[col1])
     data_y = info_dataset['build_result']
     return data_x,data_y
+
 
 #initialize parameters(w,b)
 def initialize_parameters(layer_dims):
@@ -204,19 +206,19 @@ def L_layer_model(X, Y, layer_dims, learning_rate, num_iterations):
 		# calculate the cost
 		cost = compute_cost(AL, Y)
 		if i % 1000 == 0:
-			print("Cost after iteration {}: {}".format(i, cost))
+			# print("Cost after iteration {}: {}".format(i, cost))
 			costs.append(cost)
 		#backward propagation
 		grads = backward_propagation(AL, Y, caches)
 		#update parameters
 		parameters = update_parameters(parameters, grads, learning_rate)
-	print('length of cost')
-	print(len(costs))
-	plt.clf()
-	plt.plot(costs)  # o-:圆形
-	plt.xlabel("iterations(thousand)")  # 横坐标名字
-	plt.ylabel("cost")  # 纵坐标名字
-	plt.show()
+	# print('length of cost')
+	# print(len(costs))
+	# plt.clf()
+	# plt.plot(costs)  # o-:圆形
+	# plt.xlabel("iterations(thousand)")  # 横坐标名字
+	# plt.ylabel("cost")  # 纵坐标名字
+	# plt.show()
 	return parameters
 
 #predict function
@@ -237,7 +239,7 @@ def predict(X_test,y_test,parameters):
 		else:
 			Y_prediction[0, i] = 0
 	accuracy = 1- np.mean(np.abs(Y_prediction - y_test))
-	return accuracy
+	return accuracy,Y_prediction[0,m-1]
 
 #DNN model
 def DNN(X_train, y_train, X_test, y_test, layer_dims, learning_rate= 0.001, num_iterations=30000):
@@ -255,5 +257,6 @@ if __name__ == "__main__":
 	X_test = X_test.T
 	# y_test = y_test.reshape(y_test.shape[0], -1).T
 	y_test = y_test.values.reshape(y_test.shape[0], -1).T
-	accuracy = DNN(X_train,y_train,X_test,y_test,[X_train.shape[0],10,5,1])
+	accuracy,lastPredict = DNN(X_train,y_train,X_test,y_test,[X_train.shape[0],10,5,1])
 	print(accuracy)
+        print(lastPredict)
