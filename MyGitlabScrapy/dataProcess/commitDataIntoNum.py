@@ -10,6 +10,11 @@ import numpy as np
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
+def openJsonFile(filePath):
+    file_info = open(filePath, "rb")
+    info_data = json.load(file_info)
+    return info_data
+
 # 将时间整理为数值形式
 def utc_to_local(utc_time_str, utc_format='%Y-%m-%dT%H:%M:%SZ'):
     local_tz = pytz.timezone('Asia/Chongqing')
@@ -20,11 +25,9 @@ def utc_to_local(utc_time_str, utc_format='%Y-%m-%dT%H:%M:%SZ'):
     return int(time.mktime(time.strptime(time_str, local_format)))
 
 # 将构建结果和链接  与  commit各项信息合并
-def commits_info_merge():
-    file_info = open("../data/commit_info.json", "rb")
-    info_data = json.load(file_info)
-    file_result = open("../data/project_commit.json", "rb")
-    result_data = json.load(file_result)
+def commits_info_merge(filePath1,filePath2,filePath3):
+    info_data = openJsonFile(filePath1)
+    result_data = openJsonFile(filePath2)
 
     p1 = re.compile('[^/]+(?!.*/)')
 
@@ -53,16 +56,14 @@ def commits_info_merge():
                 commit_info_merge.append(info_item)
                 break
 
-    with open('../data/commit_info_merge.json', 'w') as json_file:
+    with open(filePath3, 'w') as json_file:
           json_file.write(json.dumps(sorted(commit_info_merge, key=lambda x: x['commit_time']), indent=4))
 
 
 
-
 # 获取每个contributer提交的总次数，制成新文件
-def get_contributer_info():
-    file_info = open("../data/commit_info_merge.json", "rb")
-    info_data = json.load(file_info)
+def get_contributer_info(filePath4,filePath5):
+    info_data = openJsonFile(filePath4)
     final_data = [{"author_name":"","auther_commit_total":"0"}]
     p1 = re.compile('\d+')
     flag = 0
@@ -82,16 +83,13 @@ def get_contributer_info():
             final_data.append(newauthor)
             newauthor = {"author_name": "", "auther_commit_total": "1"}
 
-    with open('../data/contributer_info.json', 'w') as json_file:
+    with open(filePath5, 'w') as json_file:
         json_file.write(json.dumps(final_data, indent=4))
 
 # 把contributer提交的总次数与commit的信息合并
-def merge_contributer_commit():
-    file_info = open("../data/contributer_info.json", "rb")
-    contributer_data = json.load(file_info)
-
-    file_info = open("../data/commit_info_merge.json", "rb")
-    info_data = json.load(file_info)
+def merge_contributer_commit(filePath6,filePath7,filePath8):
+    contributer_data = openJsonFile(filePath6)
+    info_data = openJsonFile(filePath7)
     commit_info_merge_contributer = []
 
     commit_tag=0
@@ -104,8 +102,9 @@ def merge_contributer_commit():
         info_data_item["commit_tag"] = str(commit_tag).decode('utf-8')
         commit_tag = commit_tag + 1
 
-    with open('../data/commit_info_merge_contributer.json', 'w') as json_file:
+    with open(filePath8, 'w') as json_file:
         json_file.write(json.dumps(sorted(commit_info_merge_contributer, key=lambda x: x['commit_time']), indent=4))
+
 
 
 # 得到每次commit源文件和配置文件修改的个数
@@ -132,9 +131,8 @@ def getJavaConfigNum(info_data_item):
     return javaNum,configNum
 
 # 将所有commit信息整合成只有构建的数值形式
-def commitDataIntoNum():
-    file_info = open("../data/commit_info_merge_contributer.json", "rb")
-    info_data = json.load(file_info)
+def commitDataIntoNum(filePath9,filePath10):
+    info_data = openJsonFile(filePath9)
 
     final_data=[]
     p1 = re.compile('\d+')
@@ -184,14 +182,13 @@ def commitDataIntoNum():
             final_data.append(mydic)
             mydic = {"additions_num": "0 additions", "deletions_num": "0 deletions", "changed_file_num": "0 changed files","commit_title_length":"0","commit_description_length":"0","java_num":"0","config_num":"0","commit_count":"0","last_build_result":"0","time_interval":"0" }
 
-    with open('../data/test_result.json', 'w') as json_file:
+    with open(filePath10, 'w') as json_file:
         json_file.write(json.dumps(sorted(final_data, key=lambda x: x['commit_time']), indent=4))
 
 
 # 最近五次项目构建的成功率
-def build_success_rate_five():
-    file_info = open("../data/test_result.json", "rb")
-    info_data = json.load(file_info)
+def build_success_rate_five(filePath11,filePath12):
+    info_data = openJsonFile(filePath11)
 
     final_data=[]
     p1 = re.compile('\d+')
@@ -215,17 +212,14 @@ def build_success_rate_five():
         final_data.append(mydic)
         mydic ={}
 
-    with open('../data/result_project_success.json', 'w') as json_file:
+    with open(filePath12, 'w') as json_file:
         json_file.write(json.dumps(sorted(final_data, key=lambda x: x['commit_time']), indent=4))
 
 
 # 将项目最近五次的构建成功率与构建信息合并
-def merge_info_success_rate():
-    file_info = open("../data/result_project_success.json", "rb")
-    project_success_data = json.load(file_info)
-
-    file_info = open("../data/test_result.json", "rb")
-    info_data = json.load(file_info)
+def merge_info_success_rate(filePath13,filePath14,filePath15):
+    project_success_data = openJsonFile(filePath13)
+    info_data = openJsonFile(filePath14)
     commit_info_merge_success = []
 
     for project_success_data_item in project_success_data:
@@ -236,21 +230,15 @@ def merge_info_success_rate():
                 commit_info_merge_success.append(info_data_item)
                 break
 
-        with open('../data/commit_info_merge_success.json', 'w') as json_file:
+        with open(filePath15, 'w') as json_file:
             json_file.write(json.dumps(sorted(commit_info_merge_success, key=lambda x: x['commit_time']), indent=4))
 
 
-def predictData():
-    # commit_info_merge_contributer.json删除了后面几个数据以作实验
-    commit_file_info = open("../data/commit_info_merge_contributer.json", "rb")
-    commit_info_data = json.load(commit_file_info)
-
-    # commit_info_merge_success.json删除了后面几个数据以作实验
-    build_file_info = open("../data/commit_info_merge_success.json", "rb")
-    build_info_data = json.load(build_file_info)
+def predictData(filePath16,filePath17,filePath18):
+    commit_info_data = openJsonFile(filePath16)
+    build_info_data = openJsonFile(filePath17)
 
     p1 = re.compile('\d+')
-    test_last_data = []
     mydic = {"additions_num": "0 additions", "deletions_num": "0 deletions", "changed_file_num": "0 changed files",
              "commit_title_length": "0", "commit_description_length": "0", "java_num": "0", "config_num": "0",
              "commit_count": "0", "last_build_result": "0", "time_interval": "0"}
@@ -287,13 +275,12 @@ def predictData():
 
     build_info_data.append(mydic)
 
-    with open('../data/final.json', 'w') as json_file:
+    with open(filePath18, 'w') as json_file:
         json_file.write(json.dumps(sorted(build_info_data, key=lambda x: x['commit_time']), indent=4))
 
 # 选择最后神经网络使用的数据，并整理为data_x data_y的格式
-def finalDataChoose():
-    file_info = open("../data/final.json", "rb")
-    info_data = json.load(file_info)
+def finalDataChoose(filePath19):
+    info_data = openJsonFile(filePath19)
 
     info_dataset = pd.DataFrame(info_data, columns=[ 'changed_code_lines', 'changed_file_num', 'java_num', 'config_num',  'commit_count',  'average_commit_filenum', 'length_all_description',"auther_commit_total","last_build_result","time_interval","success_last_five",'build_result'])
     info_dataset = info_dataset.convert_objects(convert_numeric=True)
@@ -304,23 +291,50 @@ def finalDataChoose():
     return data_x,data_y
 
 def main():
+
+    # filePath1 = "../data/commit_info.json"
+    # filePath2 = "../data/project_commit.json"
+    # filePath3 = '../data/commit_info_merge.json'
+    # # filePath4 = "../data/commit_info_merge.json"
+    # filePath5 = '../data/contributer_info.json'
+    # # filePath6 = "../data/contributer_info.json"
+    # # filePath7 = "../data/commit_info_merge.json"
+    filePath8 = '../data/commit_info_merge_contributer.json'
+    # # filePath9 = "../data/commit_info_merge_contributer.json"
+    # filePath10 = '../data/test_result.json'
+    # # filePath11 = "../data/test_result.json"
+    # filePath12 = '../data/result_project_success.json'
+    # # filePath13 = "../data/result_project_success.json"
+    # # filePath14 = "../data/test_result.json"
+    filePath15 = '../data/commit_info_merge_success.json'
+    # filePath16 = "../data/commit_info_merge_contributer.json"
+    # filePath17 = "../data/commit_info_merge_success.json"
+    filePath18 = '../data/final.json'
+    # # filePath19 = "../data/final.json"
+
+
     # # 将构建结果和链接  与  commit各项信息合并
-    # commits_info_merge()
+    # commits_info_merge(filePath1,filePath2,filePath3)
+
     # # 获取每个contributer提交的总次数，制成新文件
-    # get_contributer_info()
-    # 把contributer提交的总次数与commit的信息合并
-    # merge_contributer_commit()
+    # get_contributer_info(filePath3,filePath5)
+
+    # # 把contributer提交的总次数与commit的信息合并
+    # merge_contributer_commit(filePath5,filePath3,filePath8)
+
     # # 将所有commit信息整合成只有构建的数值形式
-    # commitDataIntoNum()
-    #
+    # commitDataIntoNum(filePath8,filePath10)
+
     # # 最近五次项目构建的成功率
-    # build_success_rate_five()
+    # build_success_rate_five(filePath10,filePath12)
+
     # # 将项目最近五次的构建成功率与构建信息合并
-    # merge_info_success_rate()
+    # merge_info_success_rate(filePath12,filePath10,filePath15)
 
     #将最后几条没有构建的组成最后一条预测信息
-    predictData()
+    predictData(filePath8,filePath15,filePath18)
 
+    # finalDataChoose(filePath18)
 
 
 if __name__ == '__main__':
