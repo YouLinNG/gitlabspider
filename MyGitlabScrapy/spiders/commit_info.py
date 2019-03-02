@@ -8,9 +8,13 @@ class MySpider(scrapy.Spider):
         'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36',
     }
 
+    def __init__(self, filePath=None, *args, **kwargs):
+        super(MySpider, self).__init__(*args, **kwargs)
+        self.filePath = filePath
+
     def start_requests(self):
         start_urls = []
-        file = open("MyGitlabScrapy/spiders/project_commit.json", "rb")
+        file = open(self.filePath, "rb")
         data = json.load(file)
         for item in data:
             start_urls.append(item["commit_href"])

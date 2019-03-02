@@ -9,14 +9,24 @@ class MySpider(scrapy.Spider):
         'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/53.0.2785.143 Safari/537.36',
     }
 
-    baseURL = 'https://gitlab.com/fdroid/fdroidclient/commits/master';
-    URLstr = '?limit=40&offset=';
-    offset = 40;
-    start_urls = [baseURL,baseURL + URLstr + str(offset)];
+    def __init__(self, baseURL=None, *args, **kwargs):
+        super(MySpider, self).__init__(*args, **kwargs)
+        self.baseURL = baseURL
+
+    def start_requests(self):
+        URLstr = '?limit=40&offset=';
+        offset = 40;
+        start_urls = [self.baseURL];
+        while offset<60000:
+            offset = offset + 40
+            url = self.baseURL + URLstr + str(offset)
+            start_urls.append(url)
+        for url in start_urls:
+            print url
+            yield scrapy.Request(url=url, callback=self.parse)
 
     def parse(self, response):
         project_commit = ProjectCommitItem()
-
         project_commits = response.xpath('//li[@class="commit flex-row js-toggle-container"]')
 
         for commit in project_commits:
@@ -29,9 +39,3 @@ class MySpider(scrapy.Spider):
             else:
                 project_commit['build_result']= ""
             yield project_commit
-
-
-        if True:
-            self.offset+=40
-            url=self.baseURL+ self.URLstr + str(self.offset)
-            yield scrapy.Request(url,callback=self.parse)

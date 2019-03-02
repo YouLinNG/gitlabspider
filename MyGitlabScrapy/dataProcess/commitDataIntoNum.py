@@ -7,8 +7,6 @@ import time
 import pytz
 import pandas as pd
 import numpy as np
-reload(sys)
-sys.setdefaultencoding('utf-8')
 
 def openJsonFile(filePath):
     file_info = open(filePath, "rb")
@@ -257,85 +255,75 @@ def predictData(filePath16,filePath17,filePath18):
                 mydic["commit_count"] = str(int(re.search(p1, mydic["commit_count"]).group()) + 1).decode('utf-8')
             break
 
-    mydic["author_name"] = commit_info_data[-1]["author_name"]
-    mydic["commit_href"] = commit_info_data[-1]["commit_href"]
-    mydic["commit_id"] = commit_info_data[-1]["commit_id"]
-    mydic["commit_time"] = commit_info_data[-1]["commit_time"]
-    mydic["auther_commit_total"] = commit_info_data[-1]["auther_commit_total"]
-    mydic["commit_tag"] = commit_info_data[-1]["commit_tag"]
+    if(int(re.search(p1, mydic["commit_count"]).group())!=0):
+        mydic["author_name"] = commit_info_data[-1]["author_name"]
+        mydic["commit_href"] = commit_info_data[-1]["commit_href"]
+        mydic["commit_id"] = commit_info_data[-1]["commit_id"]
+        mydic["commit_time"] = commit_info_data[-1]["commit_time"]
+        mydic["auther_commit_total"] = commit_info_data[-1]["auther_commit_total"]
+        mydic["commit_tag"] = commit_info_data[-1]["commit_tag"]
 
+        mydic["length_all_description"] = str(int(re.search(p1, mydic["commit_title_length"]).group()) + int(
+            re.search(p1, mydic["commit_description_length"]).group())).decode('utf-8')
+        mydic["changed_code_lines"] = str(int(re.search(p1, mydic["additions_num"]).group()) + int(
+            re.search(p1, mydic["deletions_num"]).group())).decode('utf-8')
+        mydic["average_commit_filenum"] = str(int(re.search(p1, mydic["changed_file_num"]).group()) // int(
+            re.search(p1, mydic["commit_count"]).group())).decode('utf-8')
+        mydic["last_build_result"] = build_info_data[-1]["build_result"]
+        mydic["time_interval"] = str(int(re.search(p1, commit_info_data[-1]["commit_time"]).group()) - int(
+            re.search(p1, build_info_data[-1]["commit_time"]).group())).decode('utf-8')
+        mydic["build_result"] = str("0").decode('utf-8')
+        mydic["success_last_five"] = build_info_data[-1]["success_last_five"]
 
-    mydic["length_all_description"] = str(int(re.search(p1, mydic["commit_title_length"]).group()) + int(re.search(p1, mydic["commit_description_length"]).group())).decode('utf-8')
-    mydic["changed_code_lines"] = str(int(re.search(p1, mydic["additions_num"]).group()) + int(re.search(p1, mydic["deletions_num"]).group())).decode('utf-8')
-    mydic["average_commit_filenum"] = str(int(re.search(p1, mydic["changed_file_num"]).group()) // int(re.search(p1, mydic["commit_count"]).group())).decode('utf-8')
-    mydic["last_build_result"] = build_info_data[-1]["build_result"]
-    mydic["time_interval"] = str(int(re.search(p1, commit_info_data[-1]["commit_time"]).group()) - int(re.search(p1, build_info_data[-1]["commit_time"]).group())).decode('utf-8')
-    mydic["build_result"] = str("0").decode('utf-8')
-    mydic["success_last_five"] =  build_info_data[-1]["success_last_five"]
-
-    build_info_data.append(mydic)
+        build_info_data.append(mydic)
 
     with open(filePath18, 'w') as json_file:
         json_file.write(json.dumps(sorted(build_info_data, key=lambda x: x['commit_time']), indent=4))
 
-# 选择最后神经网络使用的数据，并整理为data_x data_y的格式
-def finalDataChoose(filePath19):
-    info_data = openJsonFile(filePath19)
-
-    info_dataset = pd.DataFrame(info_data, columns=[ 'changed_code_lines', 'changed_file_num', 'java_num', 'config_num',  'commit_count',  'average_commit_filenum', 'length_all_description',"auther_commit_total","last_build_result","time_interval","success_last_five",'build_result'])
-    info_dataset = info_dataset.convert_objects(convert_numeric=True)
-    col = info_dataset.columns.values.tolist()
-    col1 = col[2:-1]
-    data_x = np.array(info_dataset[col1])
-    data_y = info_dataset['build_result']
-    return data_x,data_y
-
-def main():
-
-    # filePath1 = "../data/commit_info.json"
-    # filePath2 = "../data/project_commit.json"
-    # filePath3 = '../data/commit_info_merge.json'
-    # # filePath4 = "../data/commit_info_merge.json"
-    # filePath5 = '../data/contributer_info.json'
-    # # filePath6 = "../data/contributer_info.json"
-    # # filePath7 = "../data/commit_info_merge.json"
-    filePath8 = '../data/commit_info_merge_contributer.json'
-    # # filePath9 = "../data/commit_info_merge_contributer.json"
-    # filePath10 = '../data/test_result.json'
-    # # filePath11 = "../data/test_result.json"
-    # filePath12 = '../data/result_project_success.json'
-    # # filePath13 = "../data/result_project_success.json"
-    # # filePath14 = "../data/test_result.json"
-    filePath15 = '../data/commit_info_merge_success.json'
-    # filePath16 = "../data/commit_info_merge_contributer.json"
-    # filePath17 = "../data/commit_info_merge_success.json"
-    filePath18 = '../data/final.json'
-    # # filePath19 = "../data/final.json"
 
 
-    # # 将构建结果和链接  与  commit各项信息合并
-    # commits_info_merge(filePath1,filePath2,filePath3)
+def dataProcess(filePath1,filePath2):
+    filePath3 = '../data/commit_info_merge.json'
+    filePath4 = '../data/contributer_info.json'
+    filePath5 = '../data/commit_info_merge_contributer.json'
+    filePath6 = '../data/test_result.json'
+    filePath7 = '../data/result_project_success.json'
+    filePath8 = '../data/commit_info_merge_success.json'
+    filePath9 = '../data/final.json'
+    # 将构建结果和链接  与  commit各项信息合并
+    commits_info_merge(filePath1,filePath2,filePath3)
 
-    # # 获取每个contributer提交的总次数，制成新文件
-    # get_contributer_info(filePath3,filePath5)
+    # 获取每个contributer提交的总次数，制成新文件
+    get_contributer_info(filePath3,filePath4)
 
-    # # 把contributer提交的总次数与commit的信息合并
-    # merge_contributer_commit(filePath5,filePath3,filePath8)
+    # 把contributer提交的总次数与commit的信息合并
+    merge_contributer_commit(filePath4,filePath3,filePath5)
 
-    # # 将所有commit信息整合成只有构建的数值形式
-    # commitDataIntoNum(filePath8,filePath10)
+    # 将所有commit信息整合成只有构建的数值形式
+    commitDataIntoNum(filePath5,filePath6)
 
-    # # 最近五次项目构建的成功率
-    # build_success_rate_five(filePath10,filePath12)
+    # 最近五次项目构建的成功率
+    build_success_rate_five(filePath6,filePath7)
 
-    # # 将项目最近五次的构建成功率与构建信息合并
-    # merge_info_success_rate(filePath12,filePath10,filePath15)
+    # 将项目最近五次的构建成功率与构建信息合并
+    merge_info_success_rate(filePath7,filePath6,filePath8)
 
-    #将最后几条没有构建的组成最后一条预测信息
-    predictData(filePath8,filePath15,filePath18)
-
-    # finalDataChoose(filePath18)
+    # 将最后几条没有构建的组成最后一条预测信息
+    predictData(filePath5,filePath8,filePath9)
 
 
 if __name__ == '__main__':
-    main()
+    reload(sys)
+    sys.setdefaultencoding('utf-8')
+    filePath1 = sys.argv[1]
+    filePath2 = sys.argv[2]
+    print filePath1
+    print type(filePath1)
+    # filePath1 = "../data/commit_info.json"
+    # filePath2 = "../data/project_commit.json"
+    # print filePath2
+    # print type(filePath2)
+    dataProcess(filePath1,filePath2)
+    print "success"
+	
+	
